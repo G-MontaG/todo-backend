@@ -133,5 +133,5 @@ crashlytics-build.properties
 fabric.properties
 
 node.env
-/compiled/build-swagger.js
+compiled
 .vscode
