@@ -134,4 +134,5 @@ fabric.properties
 
 node.env
 compiled
+environment
 .vscode

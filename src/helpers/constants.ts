@@ -10,8 +10,8 @@ export const passwordMaxLength = 30;
 export const tokenAlg = 'RS512';
 export const tokenExp = 1; // days
 
-export const privateKey = fs.readFileSync(path.resolve('./environment/jwtRSA512.key'));
-export const publicKey = fs.readFileSync(path.resolve('./environment/jwtRSA512.pem'));
+export const privateKey = fs.readFileSync(path.resolve('./environment/jwtRS512.key'));
+export const publicKey = fs.readFileSync(path.resolve('./environment/jwtRS512.pem'));
 
 export const emailConfirmTokenLength = 8; // must be integer
 export const emailConfirmTokenExp = 0.5; // hours

@@ -5,7 +5,8 @@ FROM node:8
 #     apt-get -y install curl
 
 RUN mkdir -p /home/node/compiled && \
-    mkdir -p /home/node/uploads
+    mkdir -p /home/node/uploads && \
+    mkdir -p /home/node/environment
 
 ADD ./index.js /home/node/index.js
 

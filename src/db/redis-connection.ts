@@ -8,7 +8,7 @@ class RedisConnection {
     private readonly connectionUrl: string;
 
     private readonly connectionOptions = {
-        password: process.env.REDIS_PASSWORD,
+        // password: process.env.REDIS_PASSWORD,
         retry_strategy(options: any) {
             // if (options.error && options.error.code === 'ECONNREFUSED') {
             //     // End reconnecting on a specific error and flush all commands with
@@ -45,7 +45,7 @@ class RedisConnection {
     private subscribeToRedisEvents() {
         this.client.on('ready', () => {
             winston.log('info', `Redis ready`);
-            this.client.auth(process.env.REDIS_PASSWORD);
+            // this.client.auth(process.env.REDIS_PASSWORD);
         });
         this.client.on('connect', () => {
             winston.log('info', `Redis connected`);
@@ -58,7 +58,7 @@ class RedisConnection {
                 .find((type) => {
                     return error instanceof redis[type];
                 });
-            winston.log('error', `[${errorType || 'RedisError'}] ${error.command} - ${error.args}`);
+            winston.log('error', `[${errorType || 'RedisError'}] ${error}`);
         });
         this.client.on('end', () => {
             winston.log('info', 'Redis connection closed');

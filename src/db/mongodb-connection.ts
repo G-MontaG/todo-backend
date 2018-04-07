@@ -9,7 +9,7 @@ class MongodbConnection {
     private readonly connectionUrlParts: string[];
     private readonly connectionUrl: string;
 
-    private privateKey = fs.readFileSync(path.resolve('./environment/mongodb.pem'));
+    // private privateKey = fs.readFileSync(path.resolve('./environment/mongodbRS512.pem'));
     private readonly connectionOptions = {
         keepAlive: 30000,
         connectTimeoutMS: 0,
@@ -19,11 +19,12 @@ class MongodbConnection {
         reconnectInterval: 3000,
         promiseLibrary: global.Promise,
 
-        ssl: true,
-        sslCert: this.privateKey,
+        // ssl: true,
+        // sslValidate: false,
+        // sslCert: this.privateKey,
 
-        user: process.env.MONGO_USER,
-        pass: process.env.MONGO_PASSWORD
+        // user: process.env.MONGO_USER,
+        // pass: process.env.MONGO_PASSWORD
     };
 
     constructor() {
