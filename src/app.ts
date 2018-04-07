@@ -7,20 +7,24 @@ import cookieParser = require('cookie-parser');
 import compress = require('compression');
 import cors = require('cors');
 import helmet = require('helmet');
+import mongoose = require('mongoose');
 
 import winston = require('winston');
 
-// import multer = require('multer');
-// const upload = multer({dest: path.join(__dirname, '../uploads')});
+import multer = require('multer');
+const upload = multer({ dest: path.join(__dirname, '../uploads') });
 
 import './db';
-import { testRouter } from './controllers/test/test.router';
+import { redisConnection } from './db/redis-connection';
+import './models';
+import { authRouter } from './controllers/auth/auth.router';
 // import { authRouter } from './controllers/auth/auth.router';
 
 const publicDir = path.join(__dirname, 'public');
 
 class Server {
     public app: express.Application;
+    public connection: any;
 
     constructor() {
         this.app = express();
@@ -28,7 +32,8 @@ class Server {
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: true }));
         this.app.use(cookieParser());
-        this.app.use(compress(6));
+        // use ngx_http_gzip_module instead of compression
+        // this.app.use(compress({ level: 6 }));
         this.app.use(helmet());
         this.app.use(cors());
 
@@ -37,9 +42,17 @@ class Server {
         this.configureRoutes();
         this.configureErrorHandler();
 
-        this.app.listen(this.app.get('port'), () => {
+        this.connection = this.app.listen(this.app.get('port'), () => {
             winston.log('info', `Server listening on port ${this.app.get('port')} in ${this.app.get('env')} mode`);
+            if (process.send) {
+                process.send('ready');
+            }
         });
+
+        process.on('SIGINT', this._gracefulShutdown.bind(this));
+        process.on('SIGTERM', this._gracefulShutdown.bind(this));
+        process.on('uncaughtException', this.uncaughtException.bind(this));
+        process.on('unhandledRejection', this.unhandledRejection.bind(this));
     }
 
     private addNamespace(namespace: string, router) {
@@ -47,27 +60,103 @@ class Server {
     }
 
     private configureRoutes() {
-        this.addNamespace('/api', testRouter.routes);
+        this.addNamespace('/auth', authRouter.routes);
         // this.addNamespace('/api', apiRouter.routes);
     }
 
     private configureErrorHandler() {
         if (process.env.NODE_ENV === 'production') {
-            // Raven.config(
-            //    'https://256c017ff80b49059d7e3e67c562ea8a:4220dacbc2c0425aa3f836b802631467@sentry.io/189328'
-            // ).install();
+            // Raven.config(process.env.SENTRY,
+            //     {
+            //         release: process.env.VERSION,
+            //         environment: process.env.NODE_ENV,
+            //         parseUser: function (req) {
+            //             return {
+            //                 userId: req.userId
+            //             };
+            //         },
+            //         autoBreadcrumbs: {
+            //             'console': false,
+            //             'http': true,
+            //         }
+            //     })
+            //     .install();
             // this.app.use(Raven.requestHandler());
             // this.app.use(Raven.errorHandler());
         }
 
         this.app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-            winston.log('error', `${req.method} ${req.path} [${err.status}] - ${err.message}`);
-            winston.log('error', err.stack);
+            // tslint:disable-next-line:max-line-length
+            winston.log('error', `${req.protocol} ${req.method} ${req.originalUrl} [${err.status || err.code}] - ${err.message}`);
+            if (err.stack) {
+                winston.log('error', err.stack);
+            }
             res.status(err.status || 500).send({
                 message: err.message || err.name,
                 error: err.toString()
             });
         });
+    }
+
+    private _gracefulShutdown() {
+        if (process.env.NODE_ENV === 'development') {
+            return process.exit(1);
+        }
+
+        winston.log('info', 'Closing server. Get SIGINT/SIGTERM signal');
+        const cleanUp = () => {
+            return new Promise((resolve) => {
+                mongoose.disconnect().then(() => {
+                    redisConnection.client.quit(() => {
+                        resolve();
+                    });
+                });
+            });
+        };
+
+        this.connection.close(() => {
+            cleanUp().then(() => {
+                winston.log('info', 'Server closed');
+                return process.exit();
+            }).catch((err) => {
+                winston.log('info', 'Server closed with errors');
+                winston.log('info', err);
+                return process.exit();
+            });
+
+        });
+
+        setTimeout(() => {
+            cleanUp().then(() => {
+                winston.log('warning', 'Server closed forced');
+                return process.exit(1);
+            }).catch((err) => {
+                winston.log('warning', 'Server closed forced with errors');
+                winston.log('warning', err);
+                return process.exit(1);
+            });
+        }, 5000);
+
+        setTimeout(() => {
+            winston.log('error', 'Server was destroy without closing connection');
+            return process.exit(1);
+        }, 10000);
+    }
+
+    private uncaughtException(err: any) {
+        if (process.env.NODE_ENV === 'production') {
+            // Raven.captureException(err);
+        }
+        winston.log('error', err.stack);
+        process.exit(1);
+    }
+
+    private unhandledRejection(err: any) {
+        if (process.env.NODE_ENV === 'production') {
+            // Raven.captureException(err);
+        }
+        winston.log('error', err.stack);
+        process.exit(1);
     }
 }
 
