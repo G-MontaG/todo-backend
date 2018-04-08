@@ -1,5 +1,5 @@
 import express = require('express');
-import Boom from 'boom';
+import Boom = require('boom');
 import Joi = require('joi');
 import { BaseController } from '../base.controller';
 import { IUserDocument } from '../../models/user.model';

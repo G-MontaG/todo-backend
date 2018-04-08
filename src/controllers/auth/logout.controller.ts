@@ -1,7 +1,7 @@
 import express = require('express');
 import jwt = require('jsonwebtoken');
 import winston = require('winston');
-import moment from 'moment';
+import moment = require('moment');
 import { BaseController } from '../base.controller';
 import { redisConnection } from '../../db/redis-connection';
 

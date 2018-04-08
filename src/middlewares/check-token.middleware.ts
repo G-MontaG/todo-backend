@@ -1,8 +1,8 @@
 import express = require('express');
 import jwt = require('jsonwebtoken');
-import Boom from 'boom';
+import Boom = require('boom');
 import winston = require('winston');
-import moment from 'moment';
+import moment = require('moment');
 import uuid = require('uuid');
 import { BaseMiddleware } from './base.middleware';
 import { redisConnection } from '../db/redis-connection';

@@ -1,7 +1,7 @@
 import crypto = require('crypto');
 import mongoose = require('mongoose');
-import moment from 'moment';
-import passwordGenerator from 'password-generator';
+import moment = require('moment');
+import passwordGenerator = require('password-generator');
 import {
     emailConfirmTokenExp,
     emailConfirmTokenLength,

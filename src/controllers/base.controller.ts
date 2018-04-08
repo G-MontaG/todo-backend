@@ -1,8 +1,8 @@
 import express = require('express');
 import jwt = require('jsonwebtoken');
-import Boom from 'boom';
+import Boom = require('boom');
 import Joi = require('joi');
-import moment from 'moment';
+import moment = require('moment');
 import uuid = require('uuid');
 import { privateKey, tokenAlg, tokenExp } from '../helpers/constants';
 import { IUserDocument } from '../models/user.model';
@@ -45,11 +45,11 @@ export abstract class BaseController {
             xsrfToken,
             'refreshToken': user.refreshToken.value
         }, privateKey, {
-            algorithm: tokenAlg,
-            expiresIn: `${tokenExp}h`,
-            jwtid: process.env.JWT_ID
-        });
-        return {accessToken, xsrfToken};
+                algorithm: tokenAlg,
+                expiresIn: `${tokenExp}h`,
+                jwtid: process.env.JWT_ID
+            });
+        return { accessToken, xsrfToken };
     }
 
     protected errorHandler(err: any) {
