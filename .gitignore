@@ -136,3 +136,4 @@ node.env
 compiled
 environment
 .vscode
+*.code-workspace
